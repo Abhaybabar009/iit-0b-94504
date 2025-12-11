@@ -8,8 +8,3 @@ product_id,product_name,category,price,quantity
 107,Pen,Stationery,20,300
 108,Headphones,Electronics,1299,8
 109,Coffee Mug,Home,149,60
-<<<<<<< HEAD
-110,HDMI Cable,Accessories,299,35
-=======
-110,HDMI Cable,Accessories,299,35
->>>>>>> 8fd2ee43691407c3a29c7bb3aee3a08a59e7167b
