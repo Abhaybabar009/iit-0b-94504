@@ -1,7 +1,7 @@
 import csv
 
 # Read CSV file
-filename = "Products.csv"
+filename = "products.csv"
 
 products = []   # to store all rows
 
