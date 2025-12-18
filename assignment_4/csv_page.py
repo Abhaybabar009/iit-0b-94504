@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import pandasql as sqldf
+from pandasql import sqldf
 
 def csv():
     st.title("CSV SQL")
@@ -10,7 +10,7 @@ def csv():
         st.dataframe(df)
 
         query = st.text_area("enter the sql query (table name - df)")
-
-        if st.button("exectue"):
+        if st.button("execute"):
             result = sqldf(query, {"df": df})
             st.dataframe(result)
+csv()
