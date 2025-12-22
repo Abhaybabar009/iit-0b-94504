@@ -1,0 +1,6 @@
+streamlit>=1.30
+pandas>=2.0
+pandasql>=0.7
+python-dotenv>=1.0
+selenium>=4.15
+langchain>=0.1
