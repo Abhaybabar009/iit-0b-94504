@@ -1,4 +1,4 @@
-#python code is used to analyze employee data stored in acsv file by
+#python code is used to analyze employee data stored in a csv file by
  #1. reading the csv into a pandas dataframe
  #2. inspecting the sturcture of the data
  #3. running sql queries directly on the dataframe

@@ -1,3 +1,14 @@
+#Q2:
+#Count Even and Odd Numbers
+#Take a list of numbers as input (comma-separated).
+#Count how many are even and how many are odd.
+#Print results.
+#Example Input:
+#10, 21, 4, 7, 8
+
+
+
+
 # Take comma-separated input
 numbers = input("Enter numbers (comma-separated): ")
 

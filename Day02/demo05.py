@@ -1,39 +1,34 @@
-import streamlit as st 
+import streamlit as st
 
-#Create memory for chat (session state)
 if 'messages' not in st.session_state:
     st.session_state.messages = []
-#Why this is needed ❓
-#Streamlit refreshes the app on every action
-#Without session state, chat history will be lost
-#What it does:
-#Checks if messages list exists
-#If not, creates an empty list to store chat messages
-#sidebar section 
+
 with st.sidebar:
-
-#sidebar header
     st.header("Settings")
-# displays the settings title in sidebar 
+    choices = ["Upper", "Lower", "Toggle"]
+    mode = st.selectbox("Select Mode", choices)
+    count = st.slider("Message Count", min_value=2, max_value=10, value=6, step=2)
+    
+    st.subheader("Config")
+    st.json({"mode": mode, "count": count})
 
-#mode selection 
-Choices = ["Uppercase", "Lowercase", "Toggle"]
-mode = st.selectibox("Select Mode", Choices)
-#Shows a dropdown
-#User selects how the chatbot should reply:
-#Upper → HELLO
-#Lower → hello
-#Toggle → hELLO
+st.title("Sunbeam Chatbot")
 
-count = st.slider("Message Count", min_value=2, max_value=10, value=6, step=2)
-#shows a slider
-#lets  user choose number between 2 and 10 
-#in this code it is only for display/demo purpose
+msg = st.chat_input("Say something...")
+if msg:
+    outmsg = msg
+    if mode == "Upper":
+        outmsg = msg.upper()
+    elif mode == "Lower":
+        outmsg = msg.lower()
+    elif mode == "Toggle":
+        outmsg = msg.swapcase()
 
+    st.session_state.messages.append(msg)
+    st.session_state.messages.append(outmsg)
 
-#show config as json
-st.subheader("Config")
-st.json({"mode" : mode, "count" : count})
-#display selected settings in json format
-#helpful for debugginh and understanding state
-
+    msglist = st.session_state.messages
+    for idx, message in enumerate(msglist):
+        role = "human" if idx % 2 == 0 else "ai"
+        with st.chat_message(role):
+            st.write(message)

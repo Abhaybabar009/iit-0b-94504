@@ -1,3 +1,4 @@
+from langchain_openai import ChatOpenAI
 import streamlit as st
 import os
 import pandas as pd

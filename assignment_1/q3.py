@@ -1,3 +1,17 @@
+#Q3:
+#Given a CSV file Products.csv with columns:
+#Write a Python program to:
+#a) Read the CSV
+#b) Print each row in a clean format
+#c) Total number of rows
+#d) Total number of products priced above 500
+#e) Average price of all products
+#f) List all products belonging to a specific category (user input)
+#g) Total quantity of all items in stock
+
+
+
+
 import csv
 
 # a) Read the CSV
