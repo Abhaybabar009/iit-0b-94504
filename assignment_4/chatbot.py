@@ -1,3 +1,6 @@
+#1. Make a chat bot like UI. Input a message from user and reply it back, but
+# display the reply using st.write_stream(). Use delay to show chatlike effect.
+
 import streamlit as st
 import time 
 

@@ -1,3 +1,11 @@
+#2.
+#Show Login Form. If login is successful (fake auth if username & passwd is
+#same, consider valid user), show weather page. There input a city name
+#from text box and display current weather information. Provide a logout
+#button and on its click, display thanks message.
+
+
+
 import streamlit as st
 import os
 from dotenv import load_dotenv
@@ -15,7 +23,7 @@ def log_in():
     username = st.text_input("Enter Username")
     password = st.text_input("Enter password", type="password")
     if st.button("login", type = "primary"):
-        if (username == "Anish" and password == "1234"):
+        if (username == "Abhay" and password == "1234"):
             st.success("Login successful")
             st.session_state["Login"] = True
             st.rerun() 

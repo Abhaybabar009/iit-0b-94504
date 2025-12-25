@@ -30,5 +30,7 @@ print("Later Page Title:", driver.title)
 
 # stop the session
 time.sleep(20)
+#WebDriverWait use this instead of time.sleep(20) beacause it is smatter and faster
+
 
 

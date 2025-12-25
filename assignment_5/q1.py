@@ -1,3 +1,5 @@
+#1. Scrape Internship information and batches from Sunbeam website.
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
