@@ -1,156 +1,141 @@
-from langchain_openai import ChatOpenAI
-import streamlit as st
-import os
-import pandas as pd
-from pandasql import sqldf
-from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from langchain.chat_models import init_chat_model
-load_dotenv()
+from langchain.agents import create_agent
+from langchain.tools import tool
+# from dotenv import load_dotenv
+from bs4 import BeautifulSoup
+
+import pandasql as ps
+import pandas as pd
+import requests
+import os
+
+# load_dotenv()
 
 llm = init_chat_model(
-    model="llama-3.3-70b-versatile",
+    model="google/gemma-3-4b",
     model_provider="openai",
-    base_url="https://api.groq.com/openai/v1",
-    api_key=os.getenv("GROQ_API_KEY")
+    base_url="http://192.168.1.108:1234/v1",
+    api_key="not-needed"
+)
+print("welcome")
+@tool
+def csv_auto_sql_tool(file_path: str, question: str) -> str:
+    """
+    Automatically generate SQL from user question using LLM
+    and execute it on CSV using pandasql.
+    """
+    file_path = "C:/GenAi_internship/Sunbeam_assignments/iit-genai-94565/Assigment09/emp_hdr.csv"
+
+    df = pd.read_csv(file_path)
+    schema = df.dtypes.to_string() #Converts the output into a single formatted string instead of a pandas object
+
+    sql_prompt = f"""
+You are an expert SQLite developer.
+
+Table name: csv_df
+
+Schema:
+{schema}
+
+Rules:
+- Return ONLY SQL
+- No explanation
+- No markdown
+- No semicolon
+
+Question:
+{question}
+"""
+
+    sql_response = llm.invoke(sql_prompt)
+    sql_query = sql_response.content.strip() #Removing extra spaces/newlines
+
+    try:
+        result = ps.sqldf(sql_query, {"csv_df": df})
+    except Exception as e:
+        return f"SQL ERROR:\n{e}\n\nSQL:\n{sql_query}"
+
+    return f"""
+Generated SQL:
+{sql_query}
+
+Result:
+{result}
+"""
+
+@tool
+def sunbeam_web_tool(question: str) -> str:
+    """
+    Scrape Sunbeam website and answer user question
+    based on scraped content.
+    """
+    print("Love you")
+    url = "https://www.sunbeaminfo.com"
+    response = requests.get(url, timeout=10)
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+
+    text = soup.get_text(separator=" ")
+    text = " ".join(text.split())
+
+    question_lower = question.lower()
+
+    relevant = [
+        s for s in text.split(".")
+        if any(w in s.lower() for w in question_lower.split())
+    ]
+
+    if not relevant:
+        return "No relevant information found on Sunbeam website."
+
+    context = ". ".join(relevant[:8])
+
+    prompt = f"""
+Answer the question using ONLY the context below.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer in simple English.
+"""
+
+    response = llm.invoke(prompt)
+    return response.content
+
+
+agent = create_agent(
+    model=llm,
+    tools=[csv_auto_sql_tool, sunbeam_web_tool],
+    system_prompt="""
+You are an intelligent assistant.
+- Use CSV tool for CSV questions
+- Use Web tool for Sunbeam questions
+- Answer briefly and clearly
+"""
 )
 
-st.title("Bot")
 
-if "chat" not in st.session_state:
-    st.session_state.chat = []
+chat_history = []
 
-agent = st.sidebar.radio(
-    "Choose Agent",
-    ["CSV Agent", "Web Scraping Agent"]
-)
+print("\n=== Intelligent Agent Started ===")
+print("Type 'exit' to quit\n")
 
-def add_chat(role, message):
-    st.session_state.chat.append(
-        {"role": role, "message": message}
-    )
+while True:
+    user_input = input("YOU: ")
+    if user_input.lower() == "exit":
+        break
 
-for msg in st.session_state.chat:
-    with st.chat_message(msg["role"]):
-        st.write(msg["message"])
+    chat_history.append({"role": "user", "content": user_input})
 
-if agent == "CSV Agent":
+    result = agent.invoke({"messages": chat_history})
 
-    csv_file = st.file_uploader("Select the CSV file", type=["csv"])
+    chat_history.extend(result["messages"])
 
-    if csv_file is not None:
-        df = pd.read_csv(csv_file)
-        st.dataframe(df)
-
-        schema = ", ".join(
-            [f"{c} ({t})" for c, t in zip(df.columns, df.dtypes)]
-        )
-
-        add_chat(
-            "assistant",
-            f"The CSV file has {len(df.columns)} columns: {', '.join(df.columns)}"
-        )
-
-        user_input = st.chat_input("Enter the message")
-
-        if user_input:
-            add_chat("user", user_input)
-
-            llm_input = f"""
-                Table Name: data
-                Table Schema: {schema}
-                Question: {user_input}
-
-                Instruction:
-                - Write only the SQL query
-                - No explanation
-                - If not possible, return error
-                """
-
-            query = llm.invoke(llm_input)
-            sql_query = query.content.strip()
-
-            st.write(sql_query)
-
-            if sql_query.lower() == "error":
-                st.error("Could not generate SQL query")
-                add_chat("assistant", "I could not generate a valid SQL query.")
-            else:
-                try:
-                    result_table = sqldf(sql_query, {"data": df})
-                    st.dataframe(result_table)
-
-                    explanation = (
-                        "I converted your question into an SQL query. "
-                        "Then I executed the query on the uploaded CSV file. "
-                        "The table shown above is the result."
-                    )
-
-                    add_chat("assistant", explanation)
-
-                except Exception as e:
-                    st.error("SQL execution failed")
-                    add_chat("assistant", str(e))
-
-if agent == "Web Scraping Agent":
-    st.header("Web Scraping Agent")
-
-    user_input = st.chat_input("Ask about Sunbeam internships")
-
-    if user_input:
-        add_chat("user", user_input)
-
-        keyword_prompt = f"""
-        Extract important search keywords from the following question.
-        Return only comma-separated keywords. No explanation.
-
-        Question:{user_input}
-        """
-
-        keyword_response = llm.invoke(keyword_prompt)
-        keywords = [k.strip().lower() for k in keyword_response.content.split(",")]
-
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(options=chrome_options)
-        wait = WebDriverWait(driver, 10)
-
-        driver.get("https://www.sunbeaminfo.in/internship")
-        wait.until(EC.presence_of_element_located((By.TAG_NAME, "table")))
-
-        rows = driver.find_elements(By.TAG_NAME, "tr")
-
-        results = []
-
-        for row in rows:
-            cols = row.find_elements(By.TAG_NAME, "td")
-            row_text = " ".join([c.text.lower() for c in cols])
-
-            if any(k in row_text for k in keywords):
-                results.append([c.text for c in cols])
-
-        driver.quit()
-
-        if results:
-            st.subheader("Matching Internship Details")
-            for r in results:
-                st.write(" | ".join(r))
-                st.divider()
-
-            add_chat(
-                "assistant",
-                f"I analyzed your question, extracted keywords ({', '.join(keywords)}), and found matching internship data from Sunbeam."
-            )
-        else:
-            st.warning("No matching data found")
-            add_chat(
-                "assistant",
-                "I understood your question, but the requested information was not found on the internship page."
-            )
+    print("\nAI:", result["messages"][-1].content)
+    print("-" * 50)
