@@ -2,9 +2,9 @@ import os
 import requests
 import json 
 import time 
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 
-load_dotenv 
+load_dotenv() 
 api_key = os.getenv("GROQ_API_KEY")
 url = "https://api.groq.com/openai/v1/chat/completions"
 headers = {
